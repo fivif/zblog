@@ -16,11 +16,7 @@ RUN pip install --no-cache-dir \
 
 COPY . .
 
-RUN mkdir -p /app/data/articles /app/data/media
-
-ENV BLOG_CONTENT_DIR=/app/data/articles
-ENV BLOG_MEDIA_DIR=/app/data/media
-ENV BLOG_DB_URL=sqlite:///./app/data/blog.db
+RUN mkdir -p /data/articles /data/media
 
 EXPOSE 8000
 
