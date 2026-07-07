@@ -47,7 +47,7 @@ class Settings:
         db_url = os.getenv("BLOG_DB_URL", "sqlite:///./apps/api/blog.db")
         if db_url.startswith("sqlite:///./"):
             relative = db_url.removeprefix("sqlite:///./")
-            db_url = f"sqlite:///{(ROOT_DIR / relative).resolve().as_posix()}"
+            db_url = f"sqlite:////{(ROOT_DIR / relative).resolve().as_posix()}"
 
         return cls(
             admin_username=os.getenv("BLOG_ADMIN_USERNAME", "admin"),
