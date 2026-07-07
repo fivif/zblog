@@ -1,0 +1,12 @@
+node_modules/
+.next/
+dist/
+.pnpm-store/
+venv/
+.venv/
+__pycache__/
+.pytest_cache/
+*.pyc
+*.db
+.tmp-*
+uvicorn-test.*

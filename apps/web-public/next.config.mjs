@@ -6,6 +6,7 @@ const apiBaseUrl = process.env.PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_AP
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: "standalone",
   transpilePackages: ["@blog/contracts"],
   outputFileTracingRoot: path.resolve(__dirname, "../.."),
   async rewrites() {

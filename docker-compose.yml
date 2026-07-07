@@ -1,0 +1,40 @@
+version: "3.8"
+
+services:
+  api:
+    build: ./apps/api
+    container_name: blog-api
+    ports:
+      - "8000:8000"
+    environment:
+      - BLOG_ADMIN_USERNAME=${BLOG_ADMIN_USERNAME:-admin}
+      - BLOG_ADMIN_PASSWORD=${BLOG_ADMIN_PASSWORD:-change-me}
+      - BLOG_SECRET_KEY=${BLOG_SECRET_KEY:-replace-with-a-long-random-secret}
+      - BLOG_DB_URL=sqlite:///./app/data/blog.db
+      - BLOG_CONTENT_DIR=/app/data/articles
+      - BLOG_MEDIA_DIR=/app/data/media
+    volumes:
+      - blog-data:/app/data
+    restart: unless-stopped
+
+  web-public:
+    build: ./apps/web-public
+    container_name: blog-web
+    ports:
+      - "3000:3000"
+    environment:
+      - PUBLIC_API_BASE_URL=http://api:8000
+      - NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  web-admin:
+    build: ./apps/web-admin
+    container_name: blog-admin
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+
+volumes:
+  blog-data:
