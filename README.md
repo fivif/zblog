@@ -1,6 +1,6 @@
-# Zay Blog — 个人博客系统
+# Zblog — 全栈个人博客系统
 
-一个以 **Markdown 写作 + 管理后台 + 公开阅读** 为核心的轻量全栈博客系统。
+Markdown 写作 + 管理后台 + 公开阅读的轻量博客系统。
 
 [![Version](https://img.shields.io/badge/version-1.0.0-blue)](https://github.com/fivif/zblog/releases)
 
@@ -11,42 +11,129 @@
 | 后端 API | Python 3.11 + FastAPI + SQLModel + SQLite |
 | 博客前台 | Next.js 15 + React 19 |
 | 管理后台 | React 18 + Vite 6 |
-| 包管理 | pnpm 10 (monorepo workspace) |
-| 部署 | Docker + docker-compose |
+| 包管理 | pnpm 10 (monorepo) |
+| 部署 | Docker + docker-compose + Nginx |
 
 ## 功能
 
-### 📖 公开前台
-- 文章列表与文章详情
-- 分类树形筛选、标签筛选、全文搜索
-- Markdown 渲染：代码高亮 + 一键复制、表格、图片、HTML 安全预览
-- 文章目录（TOC）自动生成与导航
-- 视频播放（Plyr 播放器集成）
-- 浏览统计（停留 > 5s 计数）+ 点赞功能
-- 系统浅色 / 深色模式，可手动切换
-- 侧边栏可折叠、固定滚动、子分类折叠
-- 全设备响应式（桌面 / 平板 / 手机）
+- 📝 Markdown 写作 + 实时预览 + 代码高亮复制
+- 🌳 无限层级分类树 + 标签系统
+- 🔍 全文搜索
+- 📊 浏览统计（停留 >5s 计数）+ 点赞
+- 🎬 Plyr 视频播放器
+- 🎨 系统浅色/深色模式 + 侧栏折叠
+- 📱 全设备响应式（手机侧栏抽屉）
+- 🔒 bcrypt 密码哈希 + 首次初始化引导
+- 📁 媒体上传 + 拖拽粘贴
+- 🖼 自定义站点图标
+- 🐳 一键 Docker 部署
 
-### 🛠 管理后台
-- 首次进入自动初始化：设置管理员账户密码
-- 账户管理：登录 / 退出 / 修改用户名密码
-- 文章管理：新建、编辑、删除、发布 / 下线 / 归档
-- 文章编辑器：Markdown 编辑 + 实时预览（分屏/编辑/预览模式）
-- 媒体库：上传图片视频、拖拽粘贴上传、复制 Markdown 引用
-- 分类管理：无限层级树形分类、排序、启用/禁用、循环检测
-- 标签管理：自动 slug 生成、使用计数、重命名同步
-- 边栏配置：左右底三区域、Markdown/HTML/链接组/通知/广告
-- 站点设置：标题、副标题
-- 信息密度列表：排序、浏览数、点赞数
+## Docker 部署（推荐）
 
-### 🔒 安全
-- bcrypt 密码哈希存储
-- HMAC-SHA256 会话令牌 + 恒等时间比较
-- Cookie HttpOnly + SameSite=Lax
-- bleach HTML 安全白名单过滤
-- 文件上传类型校验 + 路径穿越防护
+### 1. 准备服务器
 
-## 快速开始
+```bash
+# 需要 Docker 和 docker compose
+docker --version        # >= 20.10
+docker compose version  # >= 2.0
+```
+
+### 2. 拉取项目
+
+```bash
+git clone https://github.com/fivif/zblog.git /opt/zblog
+cd /opt/zblog
+```
+
+### 3. 配置环境变量
+
+```bash
+cp .env.example .env
+# 修改 BLOG_SECRET_KEY 为随机字符串
+openssl rand -hex 32  # 生成密钥填入 .env
+```
+
+```ini
+# .env 关键配置
+BLOG_SECRET_KEY=<生成的随机密钥>
+BLOG_ADMIN_USERNAME=admin      # 初始管理员（DB未配置时使用）
+BLOG_ADMIN_PASSWORD=change-me   # 初始密码（首次登录后立即在后台修改）
+```
+
+### 4. 启动服务
+
+```bash
+# 构建并启动所有服务
+docker compose up -d --build
+
+# 查看运行状态
+docker compose ps
+```
+
+### 5. 配置 Nginx 反向代理
+
+以 `blog.xzay.de`（前台）和 `adblog.xzay.de`（后台）为例：
+
+```nginx
+# 前台博客
+server {
+    listen 443 ssl http2;
+    server_name blog.xzay.de;
+    ssl_certificate     /ssl/your-domain/fullchain.pem;
+    ssl_certificate_key /ssl/your-domain/privkey.pem;
+    client_max_body_size 500M;
+
+    location /api/   { proxy_pass http://127.0.0.1:8001; proxy_set_header Host $host; }
+    location /media/ { proxy_pass http://127.0.0.1:8001; proxy_set_header Host $host; }
+    location /       { proxy_pass http://127.0.0.1:3030; proxy_set_header Host $host; proxy_set_header X-Forwarded-Proto $scheme; }
+}
+
+# 管理后台
+server {
+    listen 443 ssl http2;
+    server_name adblog.xzay.de;
+    ssl_certificate     /ssl/your-domain/fullchain.pem;
+    ssl_certificate_key /ssl/your-domain/privkey.pem;
+    client_max_body_size 500M;
+
+    location / { proxy_pass http://127.0.0.1:8080; proxy_set_header Host $host; proxy_set_header X-Forwarded-Proto $scheme; }
+}
+
+server {
+    listen 80;
+    server_name blog.xzay.de adblog.xzay.de;
+    return 301 https://$host$request_uri;
+}
+```
+
+> 如果使用 1Panel，将上述配置放到 `/etc/nginx/conf.d/` 目录下。
+
+### 6. 首次使用
+
+1. 打开 `https://blog.xzay.de`（前台）
+2. 打开 `https://adblog.xzay.de`（后台）
+3. 首次进入后台会提示设置**管理员账户和密码**
+4. 在「分类管理」和「标签管理」整理内容结构
+5. 在「站点设置」配置标题、副标题、图标
+6. 开始写文章并发布
+
+### 更新部署
+
+```bash
+cd /opt/zblog
+git pull
+docker compose up -d --build
+```
+
+### Docker 服务端口
+
+| 服务 | 容器名 | 对外端口 | 内部端口 |
+|------|--------|----------|----------|
+| API | blog-api | `127.0.0.1:8001` | 8000 |
+| 前台 | blog-web | `127.0.0.1:3030` | 3000 |
+| 后台 | blog-admin | `0.0.0.0:8080` | 80 |
+
+## 本地开发
 
 ### 环境要求
 
@@ -54,128 +141,61 @@
 - Node.js 22+
 - pnpm 10+
 
-### 本地开发
+### 启动
 
 ```bash
-# 安装前端依赖
+# 安装依赖
 pnpm install
+python3.11 -m venv venv && source venv/bin/activate
+pip install fastapi uvicorn sqlmodel python-multipart markdown-it-py mdit-py-plugins pygments bleach bcrypt
 
-# 安装后端依赖
-python3.11 -m venv venv
-source venv/bin/activate
-pip install fastapi uvicorn sqlmodel python-multipart \
-  markdown-it-py mdit-py-plugins pygments bleach bcrypt
+# 启动 API（:8000）
+cd apps/api && python -m uvicorn blog_api.main:app --reload --port 8000
 
-# 启动 API（端口 8000）
-cd apps/api
-python -m uvicorn blog_api.main:app --reload --port 8000
-
-# 启动公开前台（端口 3000）
+# 启动前台（:3000）
 pnpm --filter web-public dev
 
-# 启动管理后台（端口 5173）
+# 启动后台（:5173）
 pnpm --filter web-admin dev
 ```
 
-### Docker 部署
+### 运行测试
 
 ```bash
-# 复制环境变量
-cp .env.example .env
-# 编辑 .env 设置密钥和初始密码
+# 后端
+PYTHONPATH=apps/api venv/bin/python -m pytest apps/api/tests -q
 
-# 构建并启动
-docker compose up -d
-
-# 启动后访问：
-#   公开前台: http://localhost:3000
-#   管理后台: http://localhost:8080
-#   后端 API: http://localhost:8000
+# 前端
+pnpm test
 ```
-
-### 首次使用
-
-1. 打开后台 `http://localhost:5173`（本地）或 `http://localhost:8080`（Docker）
-2. 设置管理员用户名和密码
-3. 在「分类管理」和「标签管理」整理内容结构
-4. 在「媒体库」上传图片或视频
-5. 开始写文章并发布
 
 ## 目录结构
 
 ```
-blog/
 ├── apps/
 │   ├── api/                    # FastAPI 后端
 │   │   ├── blog_api/
-│   │   │   ├── main.py         # 应用入口 + CORS
+│   │   │   ├── main.py         # 应用入口
 │   │   │   ├── config.py       # 环境变量配置
 │   │   │   ├── models.py       # SQLModel 数据模型
-│   │   │   ├── database.py     # 数据库连接 + 迁移
-│   │   │   ├── auth.py         # 认证 + 会话管理
-│   │   │   ├── schemas.py      # Pydantic 请求/响应模型
+│   │   │   ├── auth.py         # bcrypt 认证 + 会话管理
 │   │   │   ├── services.py     # 业务逻辑层
 │   │   │   ├── markdown_utils.py # Markdown 渲染 + 代码高亮
-│   │   │   ├── utils.py        # 工具函数
-│   │   │   ├── seed.py         # 初始数据
-│   │   │   └── routers/
-│   │   │       ├── public.py   # 公开 API
-│   │   │       └── admin.py    # 管理 API
-│   │   ├── tests/              # pytest 测试
+│   │   │   └── routers/        # 公开 API + 管理 API
+│   │   ├── tests/
 │   │   └── Dockerfile
 │   ├── web-public/             # Next.js 博客前台
-│   │   ├── app/
-│   │   │   ├── layout.jsx      # 根布局 + 元数据
-│   │   │   ├── page.jsx        # 首页（文章列表）
-│   │   │   └── articles/[slug]/ # 文章详情页
+│   │   ├── app/                # 页面 (首页 + 文章详情)
 │   │   ├── components/         # React 组件
-│   │   │   ├── blog-shell.jsx   # 站点壳（顶栏 + 布局）
-│   │   │   ├── article-list.jsx # 文章列表（表格视图）
-│   │   │   ├── article-body.jsx # 文章正文（复制、Plyr）
-│   │   │   ├── article-toc.jsx  # 文章目录
-│   │   │   ├── category-filter.jsx # 分类筛选（可折叠）
-│   │   │   ├── tag-cloud.jsx    # 标签云
-│   │   │   ├── search-box.jsx   # 搜索框
-│   │   │   ├── sidebar-region.jsx # 边栏区域
-│   │   │   ├── theme-script.jsx  # 主题初始化脚本
-│   │   │   ├── theme-toggle.jsx  # 主题切换按钮
-│   │   │   └── view-tracker.jsx  # 浏览计数（5s 停留）
-│   │   ├── lib/                # 工具库
 │   │   └── Dockerfile
 │   └── web-admin/              # React 管理后台
 │       ├── src/pages/          # 各功能页面
-│       │   ├── SetupPage.jsx   # 首次初始化页
-│       │   ├── LoginPage.jsx   # 登录页
-│       │   ├── ArticleListPage.jsx
-│       │   ├── ArticleEditorPage.jsx # 支持拖拽上传
-│       │   ├── CategoryPage.jsx
-│       │   ├── TagPage.jsx
-│       │   ├── MediaPage.jsx
-│       │   ├── SidebarPage.jsx
-│       │   └── SettingsPage.jsx # 站点设置 + 改密码
 │       └── Dockerfile
-├── content/
-│   ├── articles/               # Markdown 文章文件
-│   └── media/                  # 上传的图片视频
+├── content/                    # Markdown 文章 + 媒体文件
 ├── packages/contracts/         # 前后端共享常量
-├── docs/                       # 设计文档
 ├── docker-compose.yml          # Docker 编排
-└── package.json                # Monorepo 根配置
+└── .env.example                # 环境变量模板
 ```
-
-## 环境变量
-
-| 变量 | 说明 | 默认值 |
-|------|------|--------|
-| `BLOG_ADMIN_USERNAME` | 初始管理员用户名（DB 未配置时使用） | `admin` |
-| `BLOG_ADMIN_PASSWORD` | 初始管理员密码（DB 未配置时使用） | `change-me` |
-| `BLOG_SECRET_KEY` | 会话令牌签名密钥 | 必须修改 |
-| `BLOG_DB_URL` | SQLite 数据库路径 | `sqlite:///./apps/api/blog.db` |
-| `BLOG_CONTENT_DIR` | Markdown 文章目录 | `./content/articles` |
-| `BLOG_MEDIA_DIR` | 媒体文件目录 | `./content/media` |
-| `PUBLIC_API_BASE_URL` | Next.js SSR 请求 API 地址 | `http://localhost:8000` |
-| `NEXT_PUBLIC_API_BASE_URL` | 浏览器端 API 地址 | `http://localhost:8000` |
-| `VITE_API_BASE_URL` | 管理后台 API 地址 | `http://localhost:8000` |
 
 ## API 概览
 
@@ -183,14 +203,14 @@ blog/
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
-| GET | `/site-settings` | 站点标题、副标题 |
-| GET | `/categories` | 分类树（仅启用的） |
+| GET | `/site-settings` | 站点配置 |
+| GET | `/categories` | 分类树 |
 | GET | `/tags` | 所有标签 |
-| GET | `/articles` | 文章列表（支持 ?category / ?tag / ?search） |
+| GET | `/articles?category=&tag=&search=` | 文章列表（支持筛选搜索） |
 | GET | `/articles/{slug}` | 文章详情 |
-| POST | `/articles/{slug}/view` | 浏览 +1（停留 >5s） |
+| POST | `/articles/{slug}/view` | 浏览 +1 |
 | POST | `/articles/{slug}/like` | 点赞 +1 |
-| GET | `/sidebar-blocks` | 边栏内容块 |
+| GET | `/sidebar-blocks` | 边栏内容 |
 
 ### 管理 API (`/api/admin`)
 
@@ -201,21 +221,26 @@ blog/
 | POST | `/auth/login` | 登录 |
 | POST | `/auth/logout` | 退出 |
 | POST | `/auth/change-password` | 修改账户密码 |
-| — | `/articles` | 文章 CRUD + 发布 / 下线 |
-| — | `/categories` | 分类 CRUD |
-| — | `/tags` | 标签 CRUD |
-| — | `/media` | 媒体列表 / 上传 / 删除 |
-| — | `/sidebar-blocks` | 边栏 CRUD |
-| — | `/site-settings` | 站点设置读 / 写 |
-| — | `/articles/preview` | Markdown 转 HTML 预览 |
+| CRUD | `/articles` | 文章管理 |
+| CRUD | `/categories` | 分类管理 |
+| CRUD | `/tags` | 标签管理 |
+| CRUD | `/sidebar-blocks` | 边栏配置 |
+| CRUD | `/site-settings` | 站点设置 |
+| GET/POST/DELETE | `/media` | 媒体上传管理 |
+| POST | `/articles/preview` | Markdown 预览 |
 
-## 设计原则
+## 环境变量
 
-- **正文即文件**：Markdown 文章独立存储，便于迁移、备份、版本控制
-- **数据库存元数据**：SQLite 只存分类、标签、统计等结构化数据
-- **安全第一**：密码 bcrypt 哈希、HTML 白名单过滤、Cookie 安全标志
-- **渐进增强**：JS 禁用时核心内容仍可阅读，JS 启用后提供交互增强
-- **响应式优先**：桌面三栏布局 → 平板侧栏可折叠 → 手机单列堆叠
+| 变量 | 说明 | 默认值 |
+|------|------|--------|
+| `BLOG_ADMIN_USERNAME` | 初始管理员 | `admin` |
+| `BLOG_ADMIN_PASSWORD` | 初始密码 | `change-me` |
+| `BLOG_SECRET_KEY` | 会话签名密钥 | 必须修改 |
+| `BLOG_DB_URL` | 数据库路径 | `sqlite:///./apps/api/blog.db` |
+| `BLOG_CONTENT_DIR` | 文章目录 | `./content/articles` |
+| `BLOG_MEDIA_DIR` | 媒体目录 | `./content/media` |
+| `PUBLIC_API_BASE_URL` | SSR API 地址 | `http://localhost:8000` |
+| `NEXT_PUBLIC_API_BASE_URL` | 浏览器 API 地址 | `http://localhost:8000` |
 
 ## 许可
 
