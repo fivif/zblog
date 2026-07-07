@@ -5,7 +5,12 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, Response, UploadFile, status
 from sqlmodel import Session, desc, select
 
-from ..auth import COOKIE_NAME, SESSION_MAX_AGE, create_session_token, require_admin
+from ..auth import (
+    COOKIE_NAME, SESSION_MAX_AGE,
+    create_session_token, require_admin,
+    get_admin_credentials, is_admin_configured,
+    hash_password, verify_password,
+)
 from ..config import Settings
 from ..database import get_session
 from ..markdown_utils import render_markdown
@@ -65,21 +70,100 @@ def get_settings(request: Request) -> Settings:
     return request.app.state.settings
 
 
-@router.post("/auth/login", response_model=SessionResponse)
-def login(payload: LoginRequest, response: Response, settings: Settings = Depends(get_settings)):
-    if (
-        payload.username != settings.admin_username
-        or payload.password != settings.admin_password
-    ):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="用户名或密码错误")
+@router.get("/auth/configured")
+def check_configured(session: Session = Depends(get_session)):
+    return {"configured": is_admin_configured(session)}
+
+
+@router.post("/auth/setup", response_model=SessionResponse)
+def setup_account(
+    payload: LoginRequest,
+    response: Response,
+    session: Session = Depends(get_session),
+    settings: Settings = Depends(get_settings),
+):
+    if is_admin_configured(session):
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="管理员账户已存在")
+    if len(payload.username.strip()) < 2:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="用户名至少2个字符")
+    if len(payload.password) < 4:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="密码至少4个字符")
+
+    from ..models import SiteSetting
+    session.add(SiteSetting(key="admin_username", value=payload.username.strip()))
+    session.add(SiteSetting(key="admin_password_hash", value=hash_password(payload.password)))
+    session.commit()
+
     response.set_cookie(
         COOKIE_NAME,
-        create_session_token(payload.username, settings),
+        create_session_token(payload.username.strip(), settings),
         httponly=True,
         samesite="lax",
         max_age=SESSION_MAX_AGE,
     )
-    return SessionResponse(authenticated=True, username=payload.username)
+    return SessionResponse(authenticated=True, username=payload.username.strip())
+
+
+@router.post("/auth/login", response_model=SessionResponse)
+def login(
+    payload: LoginRequest,
+    response: Response,
+    session: Session = Depends(get_session),
+    settings: Settings = Depends(get_settings),
+):
+    creds = get_admin_credentials(session)
+    if creds:
+        db_username, db_hash = creds
+        if payload.username == db_username and verify_password(payload.password, db_hash):
+            response.set_cookie(
+                COOKIE_NAME,
+                create_session_token(payload.username, settings),
+                httponly=True,
+                samesite="lax",
+                max_age=SESSION_MAX_AGE,
+            )
+            return SessionResponse(authenticated=True, username=payload.username)
+
+    if (
+        payload.username == settings.admin_username
+        and payload.password == settings.admin_password
+    ):
+        response.set_cookie(
+            COOKIE_NAME,
+            create_session_token(payload.username, settings),
+            httponly=True,
+            samesite="lax",
+            max_age=SESSION_MAX_AGE,
+        )
+        return SessionResponse(authenticated=True, username=payload.username)
+
+    raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="用户名或密码错误")
+
+
+@router.post("/auth/change-password", response_model=SessionResponse)
+def change_password(
+    payload: LoginRequest,
+    _: str = Depends(require_admin),
+    session: Session = Depends(get_session),
+):
+    if len(payload.password) < 4:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="密码至少4个字符")
+
+    from ..models import SiteSetting
+    item = session.get(SiteSetting, "admin_username")
+    if item:
+        item.value = payload.username.strip()
+    else:
+        session.add(SiteSetting(key="admin_username", value=payload.username.strip()))
+
+    pw_item = session.get(SiteSetting, "admin_password_hash")
+    if pw_item:
+        pw_item.value = hash_password(payload.password)
+    else:
+        session.add(SiteSetting(key="admin_password_hash", value=hash_password(payload.password)))
+
+    session.commit()
+    return SessionResponse(authenticated=True, username=payload.username.strip())
 
 
 @router.post("/auth/logout", response_model=SessionResponse)

@@ -6,12 +6,36 @@ import hmac
 import time
 
 from fastapi import Depends, HTTPException, Request, status
+import bcrypt
+from sqlmodel import Session, select
 
 from .config import Settings
 
-
 COOKIE_NAME = "blog_session"
 SESSION_MAX_AGE = 60 * 60 * 24 * 7
+
+
+def hash_password(password: str) -> str:
+    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+
+
+def verify_password(password: str, hashed: str) -> bool:
+    return bcrypt.checkpw(password.encode("utf-8"), hashed.encode("utf-8"))
+
+
+def get_admin_credentials(session: Session) -> tuple[str, str] | None:
+    from .models import SiteSetting
+    rows = session.exec(select(SiteSetting)).all()
+    values = {r.key: r.value for r in rows}
+    username = values.get("admin_username")
+    password_hash = values.get("admin_password_hash")
+    if username and password_hash:
+        return username, password_hash
+    return None
+
+
+def is_admin_configured(session: Session) -> bool:
+    return get_admin_credentials(session) is not None
 
 
 def create_session_token(username: str, settings: Settings) -> str:
@@ -59,9 +83,10 @@ def require_admin(
     request: Request,
     settings: Settings = Depends(get_settings_from_request),
 ) -> str:
+    from .database import get_session
     token = request.cookies.get(COOKIE_NAME)
     username = verify_session_token(token, settings) if token else None
-    if username != settings.admin_username:
+    if not username:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="请先登录",

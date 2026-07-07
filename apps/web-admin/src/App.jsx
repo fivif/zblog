@@ -10,6 +10,7 @@ import { ArticleListPage } from "./pages/ArticleListPage";
 import { CategoryPage } from "./pages/CategoryPage";
 import { LoginPage } from "./pages/LoginPage";
 import { MediaPage } from "./pages/MediaPage";
+import { SetupPage } from "./pages/SetupPage";
 import { SidebarPage } from "./pages/SidebarPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { TagPage } from "./pages/TagPage";
@@ -21,6 +22,7 @@ function RequireAuth({ authenticated, children }) {
 
 export default function App() {
   const [booting, setBooting] = useState(true);
+  const [configured, setConfigured] = useState(false);
   const [authenticated, setAuthenticated] = useState(false);
   const [categories, setCategories] = useState(CATEGORY_OPTIONS);
 
@@ -35,6 +37,20 @@ export default function App() {
 
   useEffect(() => {
     async function bootstrap() {
+      let isConfigured = false;
+      try {
+        const cfg = await api.configured();
+        isConfigured = cfg.configured;
+        setConfigured(isConfigured);
+      } catch {
+        setConfigured(false);
+      }
+
+      if (!isConfigured) {
+        setBooting(false);
+        return;
+      }
+
       try {
         await api.session();
         setAuthenticated(true);
@@ -54,35 +70,43 @@ export default function App() {
     setAuthenticated(false);
   };
 
-  const routes = useMemo(
-    () => (
-      <Routes>
-        <Route path="/login" element={authenticated ? <Navigate to="/articles" replace /> : <LoginPage onLogin={() => setAuthenticated(true)} />} />
-        <Route
-          path="*"
-          element={
-            <RequireAuth authenticated={authenticated}>
-              <AdminShell authenticated={authenticated} onLogout={handleLogout}>
-                <Routes>
-                  <Route path="/articles" element={<ArticleListPage categories={categories} />} />
-                  <Route path="/articles/new" element={<ArticleEditorPage categories={categories} articleId="new" />} />
-                  <Route path="/articles/:articleId" element={<RouteArticleEditor categories={categories} />} />
-                  <Route path="/categories" element={<CategoryPage onCategoriesChanged={refreshMeta} />} />
-                  <Route path="/tags" element={<TagPage />} />
-                  <Route path="/media" element={<MediaPage />} />
-                  <Route path="/sidebar" element={<SidebarPage />} />
-                  <Route path="/settings" element={<SettingsPage />} />
-                  <Route path="*" element={<Navigate to="/articles" replace />} />
-                </Routes>
-              </AdminShell>
-            </RequireAuth>
+  function handleSetupDone() {
+    setConfigured(true);
+    setAuthenticated(true);
+    refreshMeta();
+  }
+
+  if (booting) return <div className="login-shell">后台加载中…</div>;
+
+  if (!configured) {
+    return <SetupPage onSetup={handleSetupDone} />;
+  }
+
+  const routes = (
+    <Routes>
+      <Route path="/login" element={authenticated ? <Navigate to="/articles" replace /> : <LoginPage onLogin={() => setAuthenticated(true)} />} />
+      <Route
+        path="*"
+        element={
+          <RequireAuth authenticated={authenticated}>
+            <AdminShell authenticated={authenticated} onLogout={handleLogout}>
+              <Routes>
+                <Route path="/articles" element={<ArticleListPage categories={categories} />} />
+                <Route path="/articles/new" element={<ArticleEditorPage categories={categories} articleId="new" />} />
+                <Route path="/articles/:articleId" element={<RouteArticleEditor categories={categories} />} />
+                <Route path="/categories" element={<CategoryPage onCategoriesChanged={refreshMeta} />} />
+                <Route path="/tags" element={<TagPage />} />
+                <Route path="/media" element={<MediaPage />} />
+                <Route path="/sidebar" element={<SidebarPage />} />
+                <Route path="/settings" element={<SettingsPage />} />
+                <Route path="*" element={<Navigate to="/articles" replace />} />
+              </Routes>
+            </AdminShell>
+          </RequireAuth>
           }
         />
       </Routes>
-    ),
-    [authenticated, categories],
   );
 
-  if (booting) return <div className="login-shell">后台加载中…</div>;
   return routes;
 }

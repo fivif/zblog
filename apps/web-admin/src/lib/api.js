@@ -39,6 +39,12 @@ async function request(path, options = {}) {
 }
 
 export const api = {
+  configured: () => request("/api/admin/auth/configured", { method: "GET" }),
+  setup: (body) =>
+    request("/api/admin/auth/setup", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
   session: () => request("/api/admin/auth/session", { method: "GET" }),
   login: (body) =>
     request("/api/admin/auth/login", {
@@ -46,6 +52,11 @@ export const api = {
       body: JSON.stringify(body),
     }),
   logout: () => request("/api/admin/auth/logout", { method: "POST" }),
+  changePassword: (body) =>
+    request("/api/admin/auth/change-password", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
   meta: () => request("/api/admin/meta", { method: "GET" }),
   getSiteSettings: () => request("/api/admin/site-settings", { method: "GET" }),
   updateSiteSettings: (body) =>

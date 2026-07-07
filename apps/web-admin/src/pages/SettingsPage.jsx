@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 
+import { useState } from "react";
 import { ErrorNotice, FlashNotice } from "../components/Notice";
 import { api } from "../lib/api";
 
@@ -124,6 +125,56 @@ export function SettingsPage() {
           <p className="muted-text">{TEXT.previewHint}</p>
         </aside>
       </div>
+
+      <div className="settings-layout" style={{ marginTop: 16 }}>
+        <ChangePasswordSection />
+      </div>
     </section>
+  );
+}
+
+function ChangePasswordSection() {
+  const [form, setForm] = useState({ username: "", password: "", confirm: "" });
+  const [error, setError] = useState("");
+  const [flash, setFlash] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setError("");
+    if (!form.username.trim()) { setError("请输入新用户名"); return; }
+    if (form.password.length < 4) { setError("密码至少4个字符"); return; }
+    if (form.password !== form.confirm) { setError("两次密码不一致"); return; }
+    setSaving(true);
+    try {
+      await api.changePassword({ username: form.username.trim(), password: form.password });
+      setFlash("账户信息已更新，下次登录生效");
+      setForm({ username: "", password: "", confirm: "" });
+    } catch (err) {
+      setError(err.message);
+    } finally { setSaving(false); }
+  }
+
+  return (
+    <>
+      <FlashNotice message={flash} />
+      <ErrorNotice message={error} />
+      <form className="panel stack-form" onSubmit={handleSubmit}>
+        <div className="panel-title-row"><h2>修改账户</h2></div>
+        <label>
+          新用户名
+          <input value={form.username} onChange={(e) => setForm((c) => ({ ...c, username: e.target.value }))} />
+        </label>
+        <label>
+          新密码
+          <input type="password" value={form.password} onChange={(e) => setForm((c) => ({ ...c, password: e.target.value }))} />
+        </label>
+        <label>
+          确认密码
+          <input type="password" value={form.confirm} onChange={(e) => setForm((c) => ({ ...c, confirm: e.target.value }))} />
+        </label>
+        <button type="submit" disabled={saving}>{saving ? "保存中…" : "更新账户"}</button>
+      </form>
+    </>
   );
 }
