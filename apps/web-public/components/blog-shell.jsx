@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { CategoryFilter } from "./category-filter";
 import { SearchBox } from "./search-box";
@@ -25,22 +25,12 @@ export function BlogShell({
 }) {
   const hasRightBlocks = Boolean(rightBlocks?.length);
   const hasBottomBlocks = Boolean(bottomBlocks?.length);
-  const siteTitle = siteSettings?.siteTitle || "个人博客";
-  const siteSubtitle = siteSettings?.siteSubtitle || "写作系统";
+  const siteTitle = siteSettings?.siteTitle || "Zay Blog";
+  const siteSubtitle = siteSettings?.siteSubtitle || "";
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [autoCollapsed, setAutoCollapsed] = useState(false);
-
-  useEffect(() => {
-    function check() { setAutoCollapsed(window.innerWidth < 960); }
-    check();
-    window.addEventListener("resize", check);
-    return () => window.removeEventListener("resize", check);
-  }, []);
-
-  const collapsed = !sidebarOpen || autoCollapsed;
 
   return (
-    <div className={"site-shell" + (collapsed ? " sidebar-hidden" : "")}>
+    <div className={"site-shell" + (sidebarOpen ? "" : " sidebar-hidden")}>
       <header className="topbar">
         <div className="topbar-left">
           <button
