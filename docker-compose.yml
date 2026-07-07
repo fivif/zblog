@@ -17,8 +17,8 @@ services:
 
   web-public:
     build:
-      context: ./apps/web-public
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: apps/web-public/Dockerfile
     container_name: blog-web
     ports:
       - "3000:3000"
@@ -30,7 +30,9 @@ services:
     restart: unless-stopped
 
   web-admin:
-    build: ./apps/web-admin
+    build:
+      context: .
+      dockerfile: apps/web-admin/Dockerfile
     container_name: blog-admin
     ports:
       - "8080:80"
