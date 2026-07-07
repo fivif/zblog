@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { CategoryFilter } from "./category-filter";
 import { SearchBox } from "./search-box";
@@ -28,6 +28,19 @@ export function BlogShell({
   const siteTitle = siteSettings?.siteTitle || "Zay Blog";
   const siteSubtitle = siteSettings?.siteSubtitle || "";
   const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  useEffect(() => {
+    function check() {
+      if (window.innerWidth < 680) {
+        setSidebarOpen(false);
+      } else {
+        setSidebarOpen(true);
+      }
+    }
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
 
   return (
     <div className={"site-shell" + (sidebarOpen ? "" : " sidebar-hidden")}>

@@ -245,7 +245,7 @@ textarea {
   grid-template-columns: minmax(0, 1fr) 272px;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 680px) {
   .topbar {
     padding: 6px 10px;
     gap: 8px;
@@ -276,14 +276,26 @@ textarea {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .sidebar-column {
-    position: static;
-    max-height: none;
-    overflow-y: visible;
+  .sidebar-column--left {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 100;
+    width: 280px;
+    max-width: 85vw;
+    height: 100vh;
+    overflow-y: auto;
+    padding: 14px;
+    background: var(--bg);
+    border-right: 1px solid var(--line);
+    box-shadow: 8px 0 40px rgba(0, 0, 0, 0.25);
+    transform: translateX(0);
+    transition: transform 260ms ease;
   }
 
-  .sidebar-column--left {
-    order: -1;
+  .sidebar-hidden .sidebar-column--left {
+    transform: translateX(-100%);
+    box-shadow: none;
   }
 
   .control-card {
@@ -652,7 +664,7 @@ textarea {
 
 .category-tree-list {
   display: grid;
-  gap: 6px;
+  gap: 2px;
   list-style: none;
   margin: 0;
   padding: 0 0 0 12px;
@@ -718,8 +730,8 @@ textarea {
   justify-content: space-between;
   gap: 10px;
   border: 1px solid transparent;
-  border-radius: 14px;
-  padding: 9px 10px;
+  border-radius: 12px;
+  padding: 6px 8px;
   color: var(--muted);
   font-family: ui-sans-serif, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
   font-size: 0.92rem;

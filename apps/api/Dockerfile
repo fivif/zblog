@@ -11,7 +11,8 @@ RUN pip install --no-cache-dir \
   "markdown-it-py>=3.0.0" \
   "mdit-py-plugins>=0.4.0" \
   "pygments>=2.19.0" \
-  "bleach>=6.2.0"
+  "bleach>=6.2.0" \
+  "bcrypt>=4.0.0"
 
 COPY . .
 
