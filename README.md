@@ -2,7 +2,7 @@
 
 一个以 **Markdown 写作 + 管理后台 + 公开阅读** 为核心的轻量全栈博客系统。
 
-[![Version](https://img.shields.io/badge/version-1.0.0-blue)](https://github.com/fivif/personal-blog/releases)
+[![Version](https://img.shields.io/badge/version-1.0.0-blue)](https://github.com/fivif/zblog/releases)
 
 ## 技术栈
 
