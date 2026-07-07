@@ -16,7 +16,7 @@ RUN pip install --no-cache-dir \
 
 COPY . .
 
-RUN mkdir -p /data/articles /data/media
+RUN mkdir -p /app/data/articles /app/data/media
 
 EXPOSE 8000
 
