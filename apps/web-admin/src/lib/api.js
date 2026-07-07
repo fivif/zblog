@@ -5,12 +5,15 @@ export function resolveApiBaseUrl() {
   }
 
   if (typeof window !== "undefined") {
-    const protocol = window.location.protocol || "http:";
-    const hostname = window.location.hostname || "localhost";
-    return protocol + "//" + hostname + ":8000";
+    const { protocol, hostname, port } = window.location;
+    if (port && (port === "5173" || hostname === "localhost")) {
+      return protocol + "//" + hostname + ":8000";
+    }
+    return protocol + "//" + hostname.replace(/^adblog\./, "blog.");
   }
 
   return "http://localhost:8000";
+}
 }
 
 const API_BASE_URL = resolveApiBaseUrl();
