@@ -59,7 +59,7 @@ export function BlogShell({
             </svg>
           </button>
           <Link href="/" className="brand-mark" aria-label="首页">
-            <img className="brand-logo" src="/logo.svg" alt="个人博客标志" />
+            <img className="brand-logo" src={siteSettings?.siteLogoUrl || "/logo.svg"} alt="个人博客标志" />
             <span>
               <strong>{siteTitle}</strong>
               <small>{siteSubtitle}</small>

@@ -33,15 +33,17 @@ def get_site_settings(session: Session) -> SiteSettingsResponse:
     return SiteSettingsResponse(
         site_title=(values.get("site_title") or DEFAULT_SITE_TITLE).strip() or DEFAULT_SITE_TITLE,
         site_subtitle=(values.get("site_subtitle") or DEFAULT_SITE_SUBTITLE).strip(),
+        site_logo_url=(values.get("site_logo_url") or "/logo.svg").strip() or "/logo.svg",
     )
 
 
 def update_site_settings(session: Session, payload: SiteSettingsWrite) -> SiteSettingsResponse:
     site_title = payload.site_title.strip()
     site_subtitle = payload.site_subtitle.strip()
+    site_logo_url = payload.site_logo_url.strip() or "/logo.svg"
     if not site_title:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="站点标题不能为空")
-    values = {"site_title": site_title, "site_subtitle": site_subtitle}
+    values = {"site_title": site_title, "site_subtitle": site_subtitle, "site_logo_url": site_logo_url}
     for key, value in values.items():
         item = session.get(SiteSetting, key)
         if item:

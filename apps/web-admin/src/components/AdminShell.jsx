@@ -5,7 +5,7 @@ export function AdminShell({ authenticated, onLogout, children }) {
     <div className="admin-shell">
       <aside className="admin-sidebar">
         <Link to="/articles" className="admin-brand">
-          <img className="admin-brand-logo" src="/logo.svg" alt="个人博客标志" />
+          <img className="admin-brand-logo" src="/logo.svg" alt="博客标志" />
           <span>
             <strong>博客工作台</strong>
             <small>Markdown 写作与发布后台</small>

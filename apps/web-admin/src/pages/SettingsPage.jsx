@@ -22,6 +22,7 @@ const TEXT = {
 const DEFAULT_SETTINGS = {
   siteTitle: "个人博客",
   siteSubtitle: "写作系统",
+  siteLogoUrl: "/logo.svg",
 };
 
 export function SettingsPage() {
@@ -37,6 +38,7 @@ export function SettingsPage() {
         setForm({
           siteTitle: data.siteTitle || DEFAULT_SETTINGS.siteTitle,
           siteSubtitle: data.siteSubtitle || "",
+          siteLogoUrl: data.siteLogoUrl || DEFAULT_SETTINGS.siteLogoUrl,
         });
       } catch (err) {
         setError(err.message || TEXT.loadError);
@@ -63,6 +65,7 @@ export function SettingsPage() {
       const saved = await api.updateSiteSettings({
         siteTitle: form.siteTitle.trim(),
         siteSubtitle: form.siteSubtitle.trim(),
+        siteLogoUrl: form.siteLogoUrl.trim() || "/logo.svg",
       });
       setForm(saved);
       setFlash(TEXT.saved);
@@ -107,6 +110,14 @@ export function SettingsPage() {
               onChange={(event) => updateField("siteSubtitle", event.target.value)}
             />
           </label>
+          <label>
+            站点图标URL
+            <input
+              value={form.siteLogoUrl || ""}
+              placeholder="/logo.svg"
+              onChange={(event) => updateField("siteLogoUrl", event.target.value)}
+            />
+          </label>
           <button type="submit" disabled={saving}>{saving ? TEXT.saving : TEXT.save}</button>
         </form>
 
@@ -115,7 +126,7 @@ export function SettingsPage() {
             <h2>{TEXT.preview}</h2>
           </div>
           <div className="brand-preview-pill">
-            <img src="/logo.svg" alt="" />
+            <img src={form.siteLogoUrl || "/logo.svg"} alt="" />
             <span>
               <strong>{form.siteTitle || DEFAULT_SETTINGS.siteTitle}</strong>
               <small>{form.siteSubtitle || DEFAULT_SETTINGS.siteSubtitle}</small>

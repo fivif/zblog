@@ -55,11 +55,13 @@ class CategoryWrite(APIModel):
 class SiteSettingsResponse(APIModel):
     site_title: str
     site_subtitle: str
+    site_logo_url: str = "/logo.svg"
 
 
 class SiteSettingsWrite(APIModel):
     site_title: str
     site_subtitle: str = ""
+    site_logo_url: str = "/logo.svg"
 
 
 class TagResponse(APIModel):
