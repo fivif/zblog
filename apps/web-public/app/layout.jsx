@@ -7,8 +7,8 @@ export const metadata = {
   title: "Zblog",
   description: "一个以 Markdown 写作为核心的个人博客，记录日常、新闻、技术、嵌入式与人工智能。",
   icons: {
-    icon: "/logo.svg",
-    shortcut: "/logo.svg",
+    icon: "/favicon.svg",
+    shortcut: "/favicon.svg",
     apple: "/logo.svg",
   },
 };
