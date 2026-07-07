@@ -4,7 +4,7 @@ RUN corepack enable && corepack prepare pnpm@10.8.1 --activate
 
 FROM base AS deps
 COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile --prod
+RUN pnpm install --frozen-lockfile
 
 FROM base AS builder
 COPY . .

@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   api:
     build: ./apps/api
@@ -18,7 +16,9 @@ services:
     restart: unless-stopped
 
   web-public:
-    build: ./apps/web-public
+    build:
+      context: ./apps/web-public
+      dockerfile: Dockerfile
     container_name: blog-web
     ports:
       - "3000:3000"
