@@ -1,0 +1,17 @@
+{
+  "name": "personal-blog-system",
+  "private": true,
+  "packageManager": "pnpm@10.8.1",
+  "scripts": {
+    "dev": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/start-dev.ps1",
+    "dev:check": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/start-dev.ps1 -Check",
+    "dev:public": "pnpm --filter web-public dev",
+    "dev:admin": "pnpm --filter web-admin dev",
+    "build": "pnpm --filter web-public build && pnpm --filter web-admin build",
+    "test": "pnpm --filter web-public test && pnpm --filter web-admin test",
+    "typecheck": "echo \"No TypeScript typecheck configured for this JS-first monorepo.\"",
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild", "sharp"]
+  }
+  }
+}

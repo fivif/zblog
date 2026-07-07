@@ -1,0 +1,36 @@
+node_modules/
+.next/
+dist/
+coverage/
+__pycache__/
+.pytest_cache/
+.venv/
+*.pyc
+*.pyo
+*.sqlite3
+*.db
+.env
+.DS_Store
+content/media/*
+!content/media/.gitkeep
+content/articles/*
+!content/articles/.gitkeep
+
+venv/
+
+# Project artifacts
+*.db
+.tmp-*
+uvicorn-test.*
+
+# Build output
+apps/web-admin/dist/
+.pnpm-store/
+
+# Temp files
+.venv/
+venv/
+*.db
+.tmp-*
+uvicorn-test.*
+*.pid
