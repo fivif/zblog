@@ -3,7 +3,7 @@ services:
     build: ./apps/api
     container_name: blog-api
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8001:8000"
     environment:
       - BLOG_ADMIN_USERNAME=${BLOG_ADMIN_USERNAME:-admin}
       - BLOG_ADMIN_PASSWORD=${BLOG_ADMIN_PASSWORD:-change-me}
@@ -18,8 +18,8 @@ services:
       context: .
       dockerfile: apps/web-public/Dockerfile
     container_name: blog-web
-    expose:
-      - "3000"
+    ports:
+      - "127.0.0.1:3001:3000"
     environment:
       - PUBLIC_API_BASE_URL=http://api:8000
       - NEXT_PUBLIC_API_BASE_URL=https://blog.xzay.de
