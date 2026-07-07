@@ -5,7 +5,8 @@ from dataclasses import dataclass
 from pathlib import Path
 
 
-ROOT_DIR = Path(__file__).resolve().parents[3]
+_current = Path(__file__).resolve()
+ROOT_DIR = _current.parents[3] if len(_current.parents) > 3 else _current.parents[1]
 
 
 def load_env_file(path: Path) -> None:
