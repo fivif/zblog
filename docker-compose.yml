@@ -11,8 +11,6 @@ services:
       - BLOG_DB_URL=sqlite:///data/blog.db
       - BLOG_CONTENT_DIR=/data/articles
       - BLOG_MEDIA_DIR=/data/media
-    volumes:
-      - blog-data:/data
     restart: unless-stopped
 
   web-public:
