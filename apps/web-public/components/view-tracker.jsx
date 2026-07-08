@@ -9,7 +9,7 @@ export function ViewTracker({ slug }) {
     firedRef.current = false;
     const timer = setTimeout(() => {
       firedRef.current = true;
-      fetch((process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000") + "/api/public/articles/" + slug + "/view", {
+      fetch("/api/public/articles/" + slug + "/view", {
         method: "POST",
       }).catch(() => {});
     }, 5000);

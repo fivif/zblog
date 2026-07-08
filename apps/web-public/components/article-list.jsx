@@ -18,7 +18,7 @@ function LikeButton({ articleId, slug, initialCount }) {
     e.stopPropagation();
     if (liked) return;
     try {
-      const resp = await fetch((process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000") + "/api/public/articles/" + slug + "/like", { method: "POST" });
+      const resp = await fetch("/api/public/articles/" + slug + "/like", { method: "POST" });
       if (resp.ok) {
         const data = await resp.json();
         setCount(data.likeCount);

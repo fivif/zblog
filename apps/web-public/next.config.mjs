@@ -12,6 +12,10 @@ const nextConfig = {
   async rewrites() {
     return [
       {
+        source: "/api/:path*",
+        destination: apiBaseUrl + "/api/:path*",
+      },
+      {
         source: "/media/:path*",
         destination: apiBaseUrl + "/media/:path*",
       },
