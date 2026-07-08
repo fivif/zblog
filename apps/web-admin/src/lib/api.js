@@ -5,11 +5,11 @@ export function resolveApiBaseUrl() {
   }
 
   if (typeof window !== "undefined") {
-    const { protocol, hostname, port } = window.location;
-    if (port && (port === "5173" || hostname === "localhost")) {
-      return protocol + "//" + hostname + ":8000";
+    const { hostname } = window.location;
+    if (hostname === "localhost" || hostname === "127.0.0.1") {
+      return "http://" + hostname + ":8000";
     }
-    return protocol + "//" + hostname.replace(/^adblog\./, "blog.");
+    return "";
   }
 
   return "http://localhost:8000";
