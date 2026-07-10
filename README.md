@@ -245,3 +245,7 @@ pnpm test
 ## 许可
 
 MIT
+
+## 致谢
+
+感谢 [Linux DO](https://linux.do/) 社区的支持。
